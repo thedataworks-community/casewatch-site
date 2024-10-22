@@ -1,0 +1,3 @@
+[submodule "j2auth"]
+	path = j2auth
+	url = git@github.com:BadJupiter/j2auth.git
