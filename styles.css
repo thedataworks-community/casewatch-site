@@ -35,3 +35,41 @@ html, body {
 .hidden {
 	display: none;
 }
+
+/*	j2auth styles for phone and code inputs
+ */
+ 
+.phone-input {
+	padding: 11px; /* Added padding inside the input field */
+	font-size: 1.1em;
+	margin: 10px 0;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	width: 70%;
+	box-sizing: border-box;
+	text-align: center; /* Center the text and placeholder */
+}
+
+.phone-input::placeholder {
+	text-align: center; /* Center the placeholder text */
+}
+
+.code-input {
+	padding: 11px; /* Same padding as phone input */
+	font-size: 1.1em; /* Same font size as phone input */
+	margin: 10px 5px; /* Slight margin between inputs */
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	width: 20%;
+	box-sizing: border-box;
+	text-align: center; /* Center the text */
+}
+
+.modal-content {
+	background-color: #fff;
+	padding: 20px;
+	border-radius: 5px;
+	text-align: center;
+	width: 80%;
+	max-width: 400px;
+}
