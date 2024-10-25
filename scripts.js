@@ -21,7 +21,8 @@ document.addEventListener("DOMContentLoaded", async function() {
 	const suggestionsDiv = document.getElementById("county-suggestions");
 	
 	const caseNumberInput = document.getElementById("case-number");
-	
+	const caseNumberSuggestionsDiv = document.getElementById("case-number-suggestions");
+
 	const caseDescription = document.getElementById("case-description");
 	const submitBtn = document.getElementById("submit-btn");
 
@@ -220,23 +221,27 @@ document.addEventListener("DOMContentLoaded", async function() {
 		countyInput.disabled = false;
 		
 		// Function to handle county autocomplete
+// Autocomplete for County
 		countyInput.addEventListener("input", function() {
 			const query = countyInput.value.toLowerCase();
 			suggestionsDiv.innerHTML = ""; // Clear previous suggestions
+		
 			if (query) {
 				const matchingCounties = counties.filter(county => county.toLowerCase().startsWith(query));
-				
-				// Show suggestions if there are matches
+		
 				if (matchingCounties.length > 0) {
 					suggestionsDiv.style.display = "block";
 					matchingCounties.forEach(county => {
 						const option = document.createElement("div");
 						option.className = "dropdown-item";
 						option.textContent = county;
+		
+						// Use 'click' event to fill in input and hide dropdown
 						option.addEventListener("click", function() {
 							countyInput.value = county; // Set input to selected county
 							suggestionsDiv.style.display = "none"; // Hide suggestions
 							caseNumberInput.disabled = false; // Enable the case number field
+							caseNumberInput.focus(); // Move focus to case number field
 						});
 						suggestionsDiv.appendChild(option);
 					});
@@ -248,35 +253,40 @@ document.addEventListener("DOMContentLoaded", async function() {
 			}
 		});
 		
-		// Hide suggestions if the input loses focus
-		countyInput.addEventListener("blur", function() {
-			setTimeout(() => suggestionsDiv.style.display = "none", 100); // Delay to allow click
-		});
-		
-		countyInput.addEventListener("focus", function() {
-			if (suggestionsDiv.innerHTML) {
-				suggestionsDiv.style.display = "block";
-			}
-		});
-				
-		// Handle case number autocomplete after county is selected
+		// Autocomplete for Case Number based on Selected County
 		caseNumberInput.addEventListener("input", function() {
 			const selectedCounty = countyInput.value;
-			if (selectedCounty && casesByCounty[selectedCounty]) {
-				const matchingCases = casesByCounty[selectedCounty].filter(casenum => casenum.startsWith(caseNumberInput.value));
+			const query = caseNumberInput.value;
 		
-				// Autocomplete behavior (dropdown can be added here as well)
-				if (matchingCases.length === 1) {
-					caseNumberInput.value = matchingCases[0];
-					showCaseDescription(selectedCounty, matchingCases[0]);
-					submitBtn.disabled = false; // Enable submit button
+			caseNumberSuggestionsDiv.innerHTML = ""; // Clear previous suggestions
+			if (selectedCounty && casesByCounty[selectedCounty] && query) {
+				const matchingCases = casesByCounty[selectedCounty].filter(casenum => casenum.startsWith(query));
+		
+				if (matchingCases.length > 0) {
+					caseNumberSuggestionsDiv.style.display = "block";
+					matchingCases.forEach(casenum => {
+						const option = document.createElement("div");
+						option.className = "dropdown-item";
+						option.textContent = casenum;
+		
+						option.addEventListener("click", function() {
+							caseNumberInput.value = casenum; // Set input to selected case number
+							caseNumberSuggestionsDiv.style.display = "none"; // Hide suggestions
+							showCaseDescription(selectedCounty, casenum);
+							submitBtn.disabled = false; // Enable the submit button
+						});
+						caseNumberSuggestionsDiv.appendChild(option);
+					});
+				} else {
+					caseNumberSuggestionsDiv.style.display = "none";
 				}
+			} else {
+				caseNumberSuggestionsDiv.style.display = "none";
 			}
 		});
 		
-		// Show case description after both fields are valid
+		// Show case description and enable submit button
 		function showCaseDescription(county, casenum) {
-			// Assume a function fetchCaseDescription(county, casenum) that gets the description
 			caseDescription.textContent = `Selected Case: ${county} County, Case #${casenum}`;
 			caseDescription.style.display = "block";
 		}
@@ -291,9 +301,17 @@ document.addEventListener("DOMContentLoaded", async function() {
 		});
 		
 		function addCase(county, casenum) {
-			// Placeholder function for adding the case
 			console.log(`Adding case: County - ${county}, Case Number - ${casenum}`);
 		}
+		
+		// Prevent suggestions from closing prematurely by using a small delay on blur
+		countyInput.addEventListener("blur", function() {
+			setTimeout(() => suggestionsDiv.style.display = "none", 150);
+		});
+		
+		caseNumberInput.addEventListener("blur", function() {
+			setTimeout(() => caseNumberSuggestionsDiv.style.display = "none", 150);
+		});				
 	}
 });
 
