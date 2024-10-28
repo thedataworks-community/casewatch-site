@@ -19,8 +19,9 @@ let newDeviceToken;     // new token to store as cookie on device
 let userToken;			// authenticated user token (device cookie)
 let userProfile;
 
-// server URL might get overwritten with a local URL for testing
-var serverURL = 'https://ec2-18-116-237-20.us-east-2.compute.amazonaws.com';
+// server URLs might get overwritten with a local URL for testing
+var authServerURL = "https://18-191-149-152.nip.io";
+let apiServerURL
 
 const apiUserProfile = '/userprofile/';
 const apiAuthMobile = '/auth/';
@@ -58,13 +59,18 @@ async function checkLocalConfig() {
 		}
 		
 		const config = await response.json();
+		if (config['authserver']) {
+			authServerURL = config['authserver'];
+			console.log("local config - auth server:", authServerURL);
+		}
 		if (config['apiserver']) {
-			serverURL = config['apiserver'];
-			console.log("local config - API server:", serverURL);
+			apiServerURL = config['apiserver'];
+			console.log("local config - API server:", apiServerURL);
 		}
 		return true;
+
 	} catch (error) {
-		console.error("Error loading local config file:", error);
+		console.error("Error loading local configs:", error);
 		return false;
 	}
 }
@@ -86,7 +92,7 @@ async function fetchUserProfile() {
 	apptoken = appToken;
 	biz_id = bizID;
 	
-	return fetch(serverURL+apiUserProfile, {
+	return fetch(authServerURL+apiUserProfile, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json'
@@ -135,7 +141,7 @@ async function j2AuthInit(bizid,apptok) {
 }
 
 function requestAuthenticationCode(phoneNumber) {
-	return fetch(serverURL + apiAuthMobile, {
+	return fetch(authServerURL + apiAuthMobile, {
 		method: 'POST',
 		headers: {
 			'Content-Type': 'application/json',
@@ -167,7 +173,7 @@ async function verifyAuthenticationCode(userCode) {
 		console.log(JSON.stringify({ token: newDeviceToken, mobile: userMobile }));
 
 		try {
-			const response = await fetch(serverURL + apiAuthRegister, {
+			const response = await fetch(authServerURL + apiAuthRegister, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -217,7 +223,7 @@ function registerBusinessUser() {
 		
 		console.log( JSON.stringify({ mob: userMobile, bizid: bizID }) );
 		
-		return fetch(serverURL + apiRegisterBiz, {
+		return fetch(authServerURL + apiRegisterBiz, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',

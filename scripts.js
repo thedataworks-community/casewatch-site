@@ -1,6 +1,13 @@
 const BIZ = "dworks";
 const APP = "casewatch";
 
+if (!apiServerURL) { // might already be set with a local URL for testing (j2auth)
+	apiServerURL = 'https://18-117-122-205.nip.io';
+}
+
+const apiCountiesList = '/counties/';
+
+
 document.addEventListener("DOMContentLoaded", async function() {
 
 
@@ -25,9 +32,6 @@ document.addEventListener("DOMContentLoaded", async function() {
 
 	const caseDescription = document.getElementById("case-description");
 	const submitBtn = document.getElementById("submit-btn");
-
-//	
-//	confirmModal.style.display = "none";
 
 // Sample data for autocomplete (replace with server data)
 	const counties = ["Tulsa", "Oklahoma", "Creek", "Canadian", "Pottawatomie"]; // Example county list
@@ -220,38 +224,41 @@ document.addEventListener("DOMContentLoaded", async function() {
 		caseSearch.classList.remove('hidden');  // Show the bottom section if authenticated
 		countyInput.disabled = false;
 		
-		// Function to handle county autocomplete
-// Autocomplete for County
-		countyInput.addEventListener("input", function() {
-			const query = countyInput.value.toLowerCase();
+		// Function to update the county suggestions dynamically
+		const updateCountySuggestions = async (query) => {
+			const suggestions = await fetchCountySuggestions(query);
 			suggestionsDiv.innerHTML = ""; // Clear previous suggestions
 		
-			if (query) {
-				const matchingCounties = counties.filter(county => county.toLowerCase().startsWith(query));
+			if (suggestions.length > 0) {
+				suggestionsDiv.style.display = "block";
+				suggestions.forEach(county => {
+					const option = document.createElement("div");
+					option.className = "dropdown-item";
+					option.textContent = county;
 		
-				if (matchingCounties.length > 0) {
-					suggestionsDiv.style.display = "block";
-					matchingCounties.forEach(county => {
-						const option = document.createElement("div");
-						option.className = "dropdown-item";
-						option.textContent = county;
-		
-						// Use 'click' event to fill in input and hide dropdown
-						option.addEventListener("click", function() {
-							countyInput.value = county; // Set input to selected county
-							suggestionsDiv.style.display = "none"; // Hide suggestions
-							caseNumberInput.disabled = false; // Enable the case number field
-							caseNumberInput.focus(); // Move focus to case number field
-						});
-						suggestionsDiv.appendChild(option);
+					option.addEventListener("click", function() {
+						countyInput.value = county;
+						suggestionsDiv.style.display = "none";
+						caseNumberInput.disabled = false;
+						caseNumberInput.focus();
 					});
-				} else {
-					suggestionsDiv.style.display = "none";
-				}
+					suggestionsDiv.appendChild(option);
+				});
 			} else {
 				suggestionsDiv.style.display = "none";
 			}
-		});
+		};
+		
+		// Debounced event listener for county input
+		countyInput.addEventListener("input", debounce(function() {
+			const query = countyInput.value;
+			if (query) {
+				updateCountySuggestions(query);
+			} else {
+				suggestionsDiv.style.display = "none";
+			}
+		}, 300)); // Adjust delay as needed
+		
 		
 		// Autocomplete for Case Number based on Selected County
 		caseNumberInput.addEventListener("input", function() {
@@ -316,10 +323,41 @@ document.addEventListener("DOMContentLoaded", async function() {
 });
 
 
-// Handle form submission
-// document.getElementById('auth-form').addEventListener('submit', function(event) {
-//	event.preventDefault();
-//	const mobileNumber = document.getElementById('mobile-number').value;
-//	startAuthenticationFlow(mobileNumber);
-//	console.log(`TODO! authenticate this mobile: ${mobileNumber}`)
-// });
+// Debounce function to wait before making the server call
+function debounce(func, delay) {
+	let timeout;
+	return function(...args) {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => func.apply(this, args), delay);
+	};
+}
+
+// Fetch county suggestions from the FastAPI server
+async function fetchCountySuggestions(filter) {
+	try {
+		const response = await fetch(apiServerURL+apiCountiesList, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ filter: filter })
+		});
+
+		if (response.ok) {
+			result = await response.json();
+			console.log(result);
+			if (result.success) { 
+				return result.counties;
+			} else {
+				console.log(`${apiCountiesList} returned no counties for filter ${filter}`)
+				return [];
+			} // Assuming server returns an array of county names
+		} else {
+			console.error("Failed to fetch county suggestions");
+			return [];
+		}
+	} catch (error) {
+		console.error("Error fetching county suggestions:", error);
+		return [];
+	}
+}
