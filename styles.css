@@ -54,15 +54,22 @@ html, body {
 	text-align: center; /* Center the placeholder text */
 }
 
+#verificationInput {
+	display: flex;
+	gap: 5px; /* Space between input fields */
+	justify-content: center; /* Centers the inputs within the modal */
+	flex-wrap: nowrap; /* Ensures inputs don’t wrap to a new line */
+}
+
 .code-input {
 	padding: 11px; /* Same padding as phone input */
 	font-size: 1.1em; /* Same font size as phone input */
-	margin: 10px 5px; /* Slight margin between inputs */
+	margin: 0; /* Reset margin for better control within flex */
 	border: 1px solid #ccc;
 	border-radius: 4px;
-	width: 20%;
+	width: 20%; /* Keeps each input at 20% width */
 	box-sizing: border-box;
-	text-align: center; /* Center the text */
+	text-align: center;
 }
 
 .modal-content {
