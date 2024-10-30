@@ -6,6 +6,7 @@ if (!apiServerURL) { // might already be set with a local URL for testing (j2aut
 }
 
 const apiCountiesList = '/counties/';
+const apiCaseNumbersList = '/cases/';
 
 
 document.addEventListener("DOMContentLoaded", async function() {
@@ -259,38 +260,41 @@ document.addEventListener("DOMContentLoaded", async function() {
 			}
 		}, 300)); // Adjust delay as needed
 		
-		
-		// Autocomplete for Case Number based on Selected County
-		caseNumberInput.addEventListener("input", function() {
-			const selectedCounty = countyInput.value;
-			const query = caseNumberInput.value;
-		
+		// Function to update the case number suggestions dynamically
+		const updateCaseNumberSuggestions = async (query) => {
+			const suggestions = await fetchCaseNumberSuggestions(countyInput.value,query);
 			caseNumberSuggestionsDiv.innerHTML = ""; // Clear previous suggestions
-			if (selectedCounty && casesByCounty[selectedCounty] && query) {
-				const matchingCases = casesByCounty[selectedCounty].filter(casenum => casenum.startsWith(query));
 		
-				if (matchingCases.length > 0) {
-					caseNumberSuggestionsDiv.style.display = "block";
-					matchingCases.forEach(casenum => {
-						const option = document.createElement("div");
-						option.className = "dropdown-item";
-						option.textContent = casenum;
+			if (suggestions.length > 0) {
+				caseNumberSuggestionsDiv.style.display = "block";
+				suggestions.forEach(county => {
+					const option = document.createElement("div");
+					option.className = "dropdown-item";
+					option.textContent = county;
 		
-						option.addEventListener("click", function() {
-							caseNumberInput.value = casenum; // Set input to selected case number
-							caseNumberSuggestionsDiv.style.display = "none"; // Hide suggestions
-							showCaseDescription(selectedCounty, casenum);
-							submitBtn.disabled = false; // Enable the submit button
-						});
-						caseNumberSuggestionsDiv.appendChild(option);
+					option.addEventListener("click", function() {
+						caseNumberInput.value = county;
+						caseNumberSuggestionsDiv.style.display = "none";
+						caseNumberInput.disabled = false;
+						caseNumberInput.focus();
 					});
-				} else {
-					caseNumberSuggestionsDiv.style.display = "none";
-				}
+					caseNumberSuggestionsDiv.appendChild(option);
+				});
 			} else {
 				caseNumberSuggestionsDiv.style.display = "none";
 			}
-		});
+		};
+
+		// Debounced event listener for case number input
+		caseNumberInput.addEventListener("input", debounce(function() {
+			const selectedCounty = countyInput.value;
+			const query = caseNumberInput.value;
+			if (query) {
+				updateCaseNumberSuggestions(query);
+			} else {
+				caseNumberSuggestionsDiv.style.display = "none";
+			}
+		}, 300)); // Adjust delay as needed
 		
 		// Show case description and enable submit button
 		function showCaseDescription(county, casenum) {
@@ -358,6 +362,39 @@ async function fetchCountySuggestions(filter) {
 		}
 	} catch (error) {
 		console.error("Error fetching county suggestions:", error);
+		return [];
+	}
+}
+
+// Fetch county suggestions from the FastAPI server
+async function fetchCaseNumberSuggestions(county,filter) {
+	try {
+		console.log("looking for case number suggestions")
+		console.log(JSON.stringify({ county: county, filter: filter }))
+		
+		const response = await fetch(apiServerURL+apiCaseNumbersList, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ county: county, filter: filter })
+		});
+
+		if (response.ok) {
+			result = await response.json();
+			console.log(result);
+			if (result.success) { 
+				return result.casenumbers;
+			} else {
+				console.log(`${apiCaseNumbersList} returned no case numbers for county ${county} filter ${filter}`)
+				return [];
+			} // Assuming server returns an array of county names
+		} else {
+			console.error("Failed to fetch case number suggestions");
+			return [];
+		}
+	} catch (error) {
+		console.error("Error fetching case number suggestions:", error);
 		return [];
 	}
 }
