@@ -341,6 +341,7 @@ function debounce(func, delay) {
 // Fetch county suggestions from the FastAPI server
 async function fetchCountySuggestions(filter) {
 	try {
+		console.log(`filter ${filter}`);
 		const response = await fetch(apiServerURL+apiCountiesList, {
 			method: 'POST',
 			headers: {
