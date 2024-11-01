@@ -218,10 +218,12 @@ document.addEventListener("DOMContentLoaded", async function() {
 	//	Authenticated content
 
 		dynamicContent.classList.remove('hidden');
-		dynamicContent.innerHTML = `
-			<p>(here's some stuff for you to look at)</p>
-		`;
-
+	//	dynamicContent.innerHTML = `
+	//		<p>(here's some stuff for you to look at)</p>
+	//	`;
+		console.log(`TODO: fetch followed cases for ${userProfile.user.mobile}`)
+	//	follows = fetchFollowedCases(userProfile.user.mobile);
+		
 		caseSearch.classList.remove('hidden');  // Show the bottom section if authenticated
 		countyInput.disabled = false;
 		

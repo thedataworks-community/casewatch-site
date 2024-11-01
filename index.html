@@ -36,6 +36,21 @@
 				<!-- Authenticated Content (hidden by default) -->
 				<div id="authenticated-content" class="hidden">
 				<!-- This will be populated after authentication -->
+					<table class="table table-responsive table-striped">
+					<thead>
+						<tr>
+							<th scope="col" onclick="sortTable(0)">Case Number</th>
+							<th scope="col" onclick="sortTable(1)">Date</th>
+							<th scope="col">Event</th>
+							<th scope="col">Notify Me</th>
+						</tr>
+					</thead>
+					<tbody id="case-table-body">
+						<tr>
+							<td colspan="4" class="text-center">Nothing to see here yet...</td>
+						</tr>
+					</tbody>
+					</table>
 				</div>
 			</div>
 		</section>
@@ -104,5 +119,38 @@
 
 	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
 	<script src="scripts.js"></script>
+	
+	<script>
+		// Sort table by column index (0: Case Number, 1: Date)
+		let sortOrder = {};
+		function sortTable(columnIndex) {
+			const table = document.getElementById("case-table-body");
+			const rows = Array.from(table.rows).slice(0); // skip header row
+	
+			if (!sortOrder[columnIndex]) sortOrder[columnIndex] = 'asc';
+	
+			rows.sort((a, b) => {
+				let valA = a.cells[columnIndex].innerText;
+				let valB = b.cells[columnIndex].innerText;
+	
+				// Handle date sorting for columnIndex 1
+				if (columnIndex === 1) {
+					valA = new Date(valA);
+					valB = new Date(valB);
+				}
+	
+				if (sortOrder[columnIndex] === 'asc') {
+					return valA > valB ? 1 : -1;
+				} else {
+					return valA < valB ? 1 : -1;
+				}
+			});
+	
+			sortOrder[columnIndex] = sortOrder[columnIndex] === 'asc' ? 'desc' : 'asc';
+	
+			table.innerHTML = ""; // Clear the table body
+			rows.forEach(row => table.appendChild(row)); // Rebuild with sorted rows
+		}
+	</script>
 </body>
 </html>
