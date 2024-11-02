@@ -2,7 +2,7 @@ const BIZ = "dworks";
 const APP = "casewatch";
 
 if (!apiServerURL) { // might already be set with a local URL for testing (j2auth)
-	apiServerURL = 'https://18-117-122-205.nip.io';
+	apiServerURL = 'https://3-18-84-142.nip.io'; // new elastic IP
 }
 
 const apiCountiesList = '/counties/';
@@ -341,7 +341,10 @@ function debounce(func, delay) {
 // Fetch county suggestions from the FastAPI server
 async function fetchCountySuggestions(filter) {
 	try {
-		console.log(`filter ${filter}`);
+		
+//		console.log(`filter ${filter}`);
+//		console.log(JSON.stringify({ filter: filter }))
+		
 		const response = await fetch(apiServerURL+apiCountiesList, {
 			method: 'POST',
 			headers: {
