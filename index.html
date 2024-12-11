@@ -3,154 +3,101 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>CaseWatch: Court Event Notifications</title>
-	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet">
-	<link rel="stylesheet" href="styles.css">
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-masker/1.1.1/vanilla-masker.min.js"></script>
+	<title>Responsive Web App</title>
+	<!-- Bootstrap CSS -->
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<style>
+		body {
+			display: flex;
+			flex-direction: column;
+			min-height: 100vh;
+		}
+		main {
+			flex: 1;
+		}
+		.sticky-footer {
+			background-color: #f8f9fa;
+			padding: 10px;
+			text-align: center;
+		}
+	</style>
 </head>
 <body>
-	<!-- Content Canvas -->
-	<div class="content-container">
-		<!-- Top Section -->
-		<section class="top-section">
-			<div class="container">
-				<h1>Welcome to CaseWatch Oklahoma</h1>
-				<p>Get notifications and reminders for court events that are important to you.
-				Find cases by county, follow them, and we'll send you SMS alerts when
-				events are coming up so you won't miss anything.
-				</p>
-			</div>
-		</section>
-
-		<!-- Middle Section -->
-		<section class="middle-section">
-			<div class="container">
-				<!-- Authentication Form (visible by default) -->
-				<div id="auth-form-container" class="hidden">
-					<h2>Register your mobile</h2>
-					<p>Enter your mobile number below so we can register your device for SMS updates on cases you follow</p>
-					<!-- Phone number input -->
-					<input type="text" id="phone" placeholder="(mobile number here)" class="phone-input" maxlength="14">
-				</div>
-
-				<!-- Authenticated Content (hidden by default) -->
-				<div id="authenticated-content" class="hidden">
-				<!-- This will be populated after authentication -->
-					<table class="table table-responsive table-striped">
-					<thead>
-						<tr>
-							<th scope="col" onclick="sortTable(0)">Case Number</th>
-							<th scope="col" onclick="sortTable(1)">Date</th>
-							<th scope="col">Event</th>
-							<th scope="col">Notify Me</th>
-						</tr>
-					</thead>
-					<tbody id="case-table-body">
-						<tr>
-							<td colspan="4" class="text-center">Nothing to see here yet...</td>
-						</tr>
-					</tbody>
-					</table>
-				</div>
-			</div>
-		</section>
-
-		<!-- Bottom Section -->
-		<section class="bottom-section">
-			<div class="container">
-				<div id="case-search-form">
-					<h2>Find a case to follow:</h2>
-					<form id="bottom-form">
-						<!-- County Input with Autocomplete Dropdown -->
-						<div class="mb-3 position-relative">
-							<input type="text" class="form-control" id="county" placeholder="Enter county" autocomplete="off">
-							<div id="county-suggestions" class="dropdown-menu" style="display: none;"></div>
-						</div>		
-						<!-- Case Number Input with Autocomplete (Initially Disabled) -->
-						<div class="mb-3">
-							<input type="text" class="form-control" id="case-number" placeholder="Enter case number" autocomplete="off" disabled>
-							<div id="case-number-suggestions" class="dropdown-menu" style="display: none;"></div>
-						</div>
-		
-						<!-- Placeholder for Case Description -->
-						<p id="case-description" class="text-muted mt-2" style="display: none;"></p>
-		
-						<!-- Submit Button (Initially Disabled) -->
-						<button type="button" class="btn btn-primary mt-3" id="submit-btn" disabled>Submit</button>
-					</form>
-				</div>
-			</div>
-		</section>
-	</div>
-
-	<!-- BEGIN j2auth Authentication -->
-
-	<!-- Modal Structure with Bootstrap Attributes -->
-	<div id="modal" class="modal fade" tabindex="-1" aria-hidden="true">
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">Enter Verification Code</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body">
-					<p id="modalMessage">Enter the code you received</p>
-					<div id="verificationInput">
-						<input type="text" id="code1" maxlength="1" class="code-input" autocomplete="off">
-						<input type="text" id="code2" maxlength="1" class="code-input" autocomplete="off">
-						<input type="text" id="code3" maxlength="1" class="code-input" autocomplete="off">
-						<input type="text" id="code4" maxlength="1" class="code-input" autocomplete="off">
-					</div>
-				</div>
+	<!-- Top Menu Bar -->
+	<nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+		<div class="container-fluid">
+			<a class="navbar-brand" href="#">CaseSearch</a>
+			<button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+				<span class="navbar-toggler-icon"></span>
+			</button>
+			<div class="collapse navbar-collapse" id="navbarNav">
+				<ul class="navbar-nav">
+					<li class="nav-item"><a class="nav-link active" href="#" id="link-home">Judges</a></li>
+			<!--	<li class="nav-item"><a class="nav-link" href="#" id="link-about">About</a></li>
+					<li class="nav-item"><a class="nav-link" href="#" id="link-contact">Contact</a></li>
+			-->
+				</ul>
 			</div>
 		</div>
+	</nav>
+
+	<!-- Search Form Section -->
+	<div class="container my-4">
+		<form id="search-form" class="row g-3">
+			<!-- Start Date -->
+			<div class="col-md-3">
+				<label for="start-date" class="form-label">Start Date</label>
+				<input 
+					type="text" 
+					class="form-control" 
+					id="start-date" 
+					value="2022-01-01" 
+					disabled 
+					readonly>
+			</div>
+	
+			<!-- End Date -->
+			<div class="col-md-3">
+				<label for="end-date" class="form-label">End Date</label>
+				<input 
+					type="text" 
+					class="form-control" 
+					id="end-date" 
+					value="2022-01-31" 
+					disabled 
+					readonly>
+			</div>
+	
+			<!-- Attorney -->
+			<div class="col-md-4">
+				<label for="judge" class="form-label">Judge</label>
+				<input 
+					type="text" 
+					class="form-control" 
+					id="judge" 
+					placeholder="Partial Name">
+			</div>
+	
+			<!-- Search Button -->
+			<div class="col-md-2">
+				<label class="form-label d-block">&nbsp;</label> <!-- Empty label to align the button -->
+				<button type="submit" class="btn btn-primary w-100">Search</button>
+			</div>
+		</form>
 	</div>
-	
-	<script src="j2auth/j2auth.js"></script> 
-	
-	<!-- END j2auth Authentication -->
+		
+	<!-- Main Content Section -->
+	<main class="container">
+		<div id="table-container" class="table-responsive">
+			<!-- Dynamic tables will be inserted here -->
+		</div>
+	</main>
 
 	<!-- Sticky Footer -->
-	<footer class="footer">
-		<div class="container">
-			<p>CaseWatch © 2024 Dataworks LLC. All rights reserved.</p>
-		</div>
+	<footer class="sticky-footer">
+		<p>&copy; 2024 DataWorks. All rights reserved.</p>
 	</footer>
 
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/js/bootstrap.bundle.min.js"></script>
-	<script src="scripts.js"></script>
-	
-	<script>
-		// Sort table by column index (0: Case Number, 1: Date)
-		let sortOrder = {};
-		function sortTable(columnIndex) {
-			const table = document.getElementById("case-table-body");
-			const rows = Array.from(table.rows).slice(0); // skip header row
-	
-			if (!sortOrder[columnIndex]) sortOrder[columnIndex] = 'asc';
-	
-			rows.sort((a, b) => {
-				let valA = a.cells[columnIndex].innerText;
-				let valB = b.cells[columnIndex].innerText;
-	
-				// Handle date sorting for columnIndex 1
-				if (columnIndex === 1) {
-					valA = new Date(valA);
-					valB = new Date(valB);
-				}
-	
-				if (sortOrder[columnIndex] === 'asc') {
-					return valA > valB ? 1 : -1;
-				} else {
-					return valA < valB ? 1 : -1;
-				}
-			});
-	
-			sortOrder[columnIndex] = sortOrder[columnIndex] === 'asc' ? 'desc' : 'asc';
-	
-			table.innerHTML = ""; // Clear the table body
-			rows.forEach(row => table.appendChild(row)); // Rebuild with sorted rows
-		}
-	</script>
+	<script src="script.js"></script>
 </body>
 </html>
