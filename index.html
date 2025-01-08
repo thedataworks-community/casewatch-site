@@ -6,6 +6,7 @@
 	<title>Responsive Web App</title>
 	<!-- Bootstrap CSS -->
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 	<style>
 		body {
 			display: flex;
@@ -20,6 +21,9 @@
 			padding: 10px;
 			text-align: center;
 		}
+		.navbar-nav {
+			margin-left: auto; /* Aligns menu items to the right */
+		}
 	</style>
 </head>
 <body>
@@ -32,60 +36,29 @@
 			</button>
 			<div class="collapse navbar-collapse" id="navbarNav">
 				<ul class="navbar-nav">
-					<li class="nav-item"><a class="nav-link active" href="#" id="link-home">Judges</a></li>
-			<!--	<li class="nav-item"><a class="nav-link" href="#" id="link-about">About</a></li>
-					<li class="nav-item"><a class="nav-link" href="#" id="link-contact">Contact</a></li>
-			-->
+					<li class="nav-item">
+						<a class="nav-link" href="#" id="link-about">About</a>
+					</li>
 				</ul>
 			</div>
 		</div>
 	</nav>
 
 	<!-- Search Form Section -->
-	<div class="container my-4">
-		<form id="search-form" class="row g-3">
-			<!-- Start Date -->
-			<div class="col-md-3">
-				<label for="start-date" class="form-label">Start Date</label>
+	<div class="container my-4 position-relative">
+		<form id="search-form" class="row">
+			<div class="col-12 position-relative">
 				<input 
 					type="text" 
-					class="form-control" 
-					id="start-date" 
-					value="2022-01-01" 
-					disabled 
-					readonly>
-			</div>
-	
-			<!-- End Date -->
-			<div class="col-md-3">
-				<label for="end-date" class="form-label">End Date</label>
-				<input 
-					type="text" 
-					class="form-control" 
-					id="end-date" 
-					value="2022-01-31" 
-					disabled 
-					readonly>
-			</div>
-	
-			<!-- Attorney -->
-			<div class="col-md-4">
-				<label for="judge" class="form-label">Judge</label>
-				<input 
-					type="text" 
-					class="form-control" 
-					id="judge" 
-					placeholder="Partial Name">
-			</div>
-	
-			<!-- Search Button -->
-			<div class="col-md-2">
-				<label class="form-label d-block">&nbsp;</label> <!-- Empty label to align the button -->
-				<button type="submit" class="btn btn-primary w-100">Search</button>
+					class="form-control form-control-lg" 
+					id="search-input" 
+					placeholder="Enter a person, case number, issue, etc." 
+					autocomplete="off">
+				<div id="autofill-suggestions" class="dropdown-menu" style="display: none;"></div>
 			</div>
 		</form>
 	</div>
-		
+				
 	<!-- Main Content Section -->
 	<main class="container">
 		<div id="table-container" class="table-responsive">
@@ -99,5 +72,6 @@
 	</footer>
 
 	<script src="script.js"></script>
+
 </body>
 </html>

@@ -4,6 +4,9 @@ const apiJudge = '/judge/';
 
 let apiServerURL
 
+const apiEntitySearch = '/entity-search/';
+const apiEntityDetail = '/entity-detail/';
+
 async function checkLocalConfig() {
 	console.log("Check for local config info (server URL etc. - local.json");
 	
@@ -32,111 +35,211 @@ document.addEventListener('DOMContentLoaded', async () => {
 	if (!apiServerURL) { // might already be set with a local URL for testing (j2auth)
 		apiServerURL = apiProdURL; // new elastic IP
 	}
+
+	// Debounced event listener for the search input
+	const searchInput = document.getElementById("search-input");
+	const suggestionsDiv = document.getElementById("autofill-suggestions");
 	
-	document.getElementById('search-form').addEventListener('submit', async function(event) {
-		event.preventDefault(); // Prevent default form submission behavior
-
-		// Collect form data
-		const startDate = document.getElementById('start-date').value;
-		const endDate = document.getElementById('end-date').value;
-		const judge = document.getElementById('judge').value;
-
-		// API endpoint
-		const apiUrl = 'https://your-fastapi-server.com/search';
-
-		try {
-			// Send POST request to FastAPI server
-			const response = await fetch(apiServerURL+apiJudge, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					start_date: startDate,
-					end_date: endDate,
-					partial_name: judge,
-				}),
-			});
-
-			// Parse the JSON response
-			const data = await response.json();
-
-			if (!data.success) {
-				throw new Error(data.message)
-			}
-			
-			renderJudgesAndCases(data.judges);
-/*			
-			// Generate tables dynamically
-			const tableContainer = document.getElementById('table-container');
-			tableContainer.innerHTML = ''; // Clear previous content
-
-			// Loop through the response and create tables
-			data.tables.forEach((tableData, index) => {
-				const table = document.createElement('table');
-				table.className = 'table table-striped table-bordered';
-				table.innerHTML = `
-					<thead>
-						<tr>
-							${tableData.headers.map(header => `<th>${header}</th>`).join('')}
-						</tr>
-					</thead>
-					<tbody>
-						${tableData.rows.map(row => `
-							<tr>
-								${row.map(cell => `<td>${cell}</td>`).join('')}
-							</tr>
-						`).join('')}
-					</tbody>
-				`;
-				tableContainer.appendChild(table);
-			});
-*/
-		} catch (error) {
-			console.error('Error fetching data:', error);
-			alert('An error occurred while fetching data.');
+	searchInput.addEventListener("input", debounce(function () {
+		const query = searchInput.value.trim();
+		if (query) {
+			updateSearchSuggestions(query);
+		} else {
+			suggestionsDiv.style.display = "none";
 		}
-	});
+	}, 300)); // Adjust delay as needed
 });
 
-function renderJudgesAndCases(judgesData) {
+// Debounce function to limit API calls
+function debounce(func, delay) {
+	let timeout;
+	return function (...args) {
+		clearTimeout(timeout);
+		timeout = setTimeout(() => func.apply(this, args), delay);
+	};
+}
+
+// Fetch search suggestions from the FastAPI server
+async function fetchSearchSuggestions(partial) {
+	try {
+		const response = await fetch(apiServerURL+apiEntitySearch, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ partial })
+		});
+
+		if (response.ok) {
+			const result = await response.json();
+			if (result.success) {
+				console.log(result.suggestions);
+				return result.suggestions; // Assuming server returns a `suggestions` array
+			} else {
+				console.warn("No suggestions found for query:", query);
+				return [];
+			}
+		} else {
+			console.error("Failed to fetch search suggestions");
+			return [];
+		}
+	} catch (error) {
+		console.error("Error fetching search suggestions:", error);
+		return [];
+	}
+}
+
+// Function to update the search suggestions dynamically
+const updateSearchSuggestions = async (query) => {
+
+	const searchInput = document.getElementById("search-input");
+	const suggestionsDiv = document.getElementById("autofill-suggestions");
+
+	const suggestions = await fetchSearchSuggestions(query);
+	suggestionsDiv.innerHTML = ""; // Clear previous suggestions
+
+	if (suggestions.length > 0) {
+		suggestionsDiv.style.display = "block";
+		suggestions.forEach(item => {
+			const option = document.createElement("div");
+			option.className = "dropdown-item";
+			option.textContent = item.name; // Display name (or any field from API response)
+
+			option.addEventListener("click", function () {
+				searchInput.value = item.name; // Populate the input with the selected value
+				suggestionsDiv.style.display = "none";
+
+				// Make a secondary call using the selected key
+				fetchSearchResult(item.name,item.ent,item.uuid);
+			});
+
+			suggestionsDiv.appendChild(option);
+		});
+	} else {
+		suggestionsDiv.style.display = "none";
+	}
+};
+
+// Fetch search results based on a selected key
+async function fetchSearchResult(name,ent,uuid) {
+	try {
+		const response = await fetch(apiServerURL+apiEntityDetail, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+			},
+			body: JSON.stringify({ name,ent,uuid })
+		});
+
+		if (response.ok) {
+			const result = await response.json();
+			if (result.success) {
+
+				console.log("Details:", result);
+				console.log("Ent:",ent);
+				// Render or display results (e.g., update a table or content area)
+			
+				if (ent == "Disposition") {
+					showDispoPage(result.data);
+				}
+				else if (ent == "Person") {
+					showPersonPage(result.data);
+				}
+				else if (ent == "Case") {
+					showCasePage(result.data);
+				}
+				else if (ent == "Party") {
+					showPartyPage(result.data);
+				}
+				else if (ent == "Issue") {
+					showIssuePage(result.data);
+				}
+				else showOopsPage(result.data);
+				
+			} else {
+				console.log("No success with entity details",result.message)
+			}
+		} else {
+			console.error("Failed to fetch entity details");
+		}
+	} catch (error) {
+		console.error("Error fetching entity details:", error);
+	}
+}
+
+function showDispoPage(data) {
+	
+	const tableContainer = document.getElementById('table-container');
+	tableContainer.textContent = `Disposition ${data.header}`;
+}
+
+function showPersonPage(data) {
+	
+	console.log(`PersonPage ${data.name}`)
+	
 	const container = document.getElementById('table-container');
 	container.innerHTML = ''; // Clear previous content
 	
-	for (const [judgeName, judgeInfo] of Object.entries(judgesData)) {
-		// Create an <h3> element for the judge's name
-		const judgeHeader = document.createElement('h3');
-		judgeHeader.textContent = judgeName;
-		container.appendChild(judgeHeader);
-		
-//		console.log(judgeInfo);
-		
-		// Create a table for the judge's cases
-		const table = document.createElement('table');
-		table.className = 'table table-striped table-bordered';
-		table.innerHTML = `
-			<thead>
-				<tr>
-					<th>Case Number</th>
-					<th>URL</th>
-					<th>Filed Date</th>
-					<th>Counsel</th>
-					<th>Motions</th>
-				</tr>
-			</thead>
-			<tbody>
-				${judgeInfo.cases.map(caseInfo => `
-					<tr>
-						<td>${caseInfo.number}</td>
-						<td><a href="${caseInfo.URL}" target="_blank">View Case</a></td>
-						<td>${new Date(caseInfo.filed_dt * 1000).toLocaleDateString()}</td>
-						<td>${caseInfo.attorneys ? caseInfo.attorneys.join('<br>') : 'N/A'}</td>
-						<td>${caseInfo.motions ? caseInfo.motions.join('<br>') : 'N/A'}</td>
-					</tr>
-				`).join('')}
-			</tbody>
-		`;
-		container.appendChild(table);
+	const personHeader = document.createElement('h3');
+	personHeader.textContent = data.summary;
+	container.appendChild(personHeader);
+	
+	// const paragraph = document.createElement('p');
+	// paragraph.textContent = data.summary;
+	// container.appendChild(paragraph);
+	
+	// Create a table for the judge's cases
+	const table = document.createElement('table');
+	table.className = 'table table-striped table-bordered';
+	table.innerHTML = `
+		<thead>
+			<tr>
+				<th>Role</th>
+				<th>Case Number</th>
+				<th>Case Type</th>
+			</tr>
+		</thead>
+		<tbody>
 
-	}
+			${data.roles.map((roleInfo, index) => `
+				<tr data-bs-toggle="collapse" data-bs-target="#collapse-row-${index}" style="cursor: pointer;">
+					<td>${roleInfo.role}</td>
+					<td>${roleInfo.case_number}</td>
+					<td>${roleInfo.case_type}</td>
+				</tr>
+				<tr id="collapse-row-${index}" class="collapse">
+					<td></td>
+					<td colspan="2">
+						<p>${roleInfo.case_summary}</p>
+					</td>
+				</tr>
+			`).join('')}
+
+		</tbody>
+	`;
+	container.appendChild(table);
+}
+
+function showCasePage(data) {
+	
+	const tableContainer = document.getElementById('table-container');
+	tableContainer.textContent = `Case ${data.header}`;
+}
+
+function showPartyPage(data) {
+	
+	const tableContainer = document.getElementById('table-container');
+	tableContainer.textContent = `Party ${data.header}`;
+}
+
+function showIssuePage(data) {
+	
+	const tableContainer = document.getElementById('table-container');
+	tableContainer.textContent = `Issue ${data.header}`;
+}
+
+function showOopsPage(data) {
+	
+	const tableContainer = document.getElementById('table-container');
+	tableContainer.textContent = `Oops! ${data.header}`;
 }
