@@ -122,6 +122,7 @@ const updateSearchSuggestions = async (query) => {
 
 // Fetch search results based on a selected key
 async function fetchSearchResult(name,ent,uuid) {
+
 	try {
 		const response = await fetch(apiServerURL+apiEntityDetail, {
 			method: 'POST',
@@ -135,10 +136,6 @@ async function fetchSearchResult(name,ent,uuid) {
 			const result = await response.json();
 			if (result.success) {
 
-				console.log("Details:", result);
-				console.log("Ent:",ent);
-				// Render or display results (e.g., update a table or content area)
-			
 				if (ent == "Disposition") {
 					showDispoPage(result.data);
 				}
@@ -169,13 +166,67 @@ async function fetchSearchResult(name,ent,uuid) {
 
 function showDispoPage(data) {
 	
-	const tableContainer = document.getElementById('table-container');
-	tableContainer.textContent = `Disposition ${data.header}`;
+	console.log(`DispositionPage ${data}`)
+	
+	const container = document.getElementById('table-container');
+	container.innerHTML = ''; // Clear previous content
+
+	const dispoHeader = document.createElement('h3');
+	dispoHeader.textContent = data.summary;
+	container.appendChild(dispoHeader);
+
+	// Create a table for the Disposition items
+	const table = document.createElement('table');
+	table.className = 'table table-striped table-bordered';
+	table.innerHTML = `
+		<thead>
+			<tr>
+				<th>Case&nbspNumber</th>
+				<th>Case&nbspType</th>
+				<th>Issue</th>
+			</tr>
+		</thead>
+		<tbody>
+			${data.items.map((dispoInfo, index) => `
+				<tr>
+					<td>
+						<a href="#" class="case-link" data-case-uuid="${dispoInfo.case_uuid}">
+							${dispoInfo.case_number}
+						</a>
+					</td>
+					<td class="expandable" data-bs-toggle="collapse" data-bs-target="#collapse-row-${index}" style="cursor: pointer;">
+						${dispoInfo.case_type}
+					</td>
+					<td class="expandable" data-bs-toggle="collapse" data-bs-target="#collapse-row-${index}" style="cursor: pointer;">
+						${dispoInfo.issue}
+					</td>
+				</tr>
+				<tr id="collapse-row-${index}" class="collapse">
+					<td></td>
+					<td colspan="2">
+						<p>${dispoInfo.case_summary}</p>
+					</td>
+				</tr>
+			`).join('')}
+		</tbody>
+	`;
+	container.appendChild(table);
+	
+	// Attach click event listeners to all links
+	const links = container.querySelectorAll('.case-link');
+	links.forEach(link => {
+		link.addEventListener('click', (event) => {
+			event.stopPropagation(); // Prevent triggering any row events
+			event.preventDefault(); // Prevent default link behavior
+			const caseUuid = link.dataset.caseUuid;
+			fetchSearchResult("case", 'Case', caseUuid); // Call the function
+		});
+	});
 }
 
 function showPersonPage(data) {
 	
-	console.log(`PersonPage ${data.name}`)
+	console.log(`PersonPage ${data}`)
 	
 	const container = document.getElementById('table-container');
 	container.innerHTML = ''; // Clear previous content
@@ -188,15 +239,15 @@ function showPersonPage(data) {
 	// paragraph.textContent = data.summary;
 	// container.appendChild(paragraph);
 	
-	// Create a table for the judge's cases
+	// Create a table for the Person's cases
 	const table = document.createElement('table');
 	table.className = 'table table-striped table-bordered';
 	table.innerHTML = `
 		<thead>
 			<tr>
 				<th>Role</th>
-				<th>Case Number</th>
-				<th>Case Type</th>
+				<th>Case&nbspNumber</th>
+				<th>Case&nbspType</th>
 			</tr>
 		</thead>
 		<tbody>
@@ -222,8 +273,18 @@ function showPersonPage(data) {
 
 function showCasePage(data) {
 	
-	const tableContainer = document.getElementById('table-container');
-	tableContainer.textContent = `Case ${data.header}`;
+	console.log(`CasePage ${data}`)
+
+	const container = document.getElementById('table-container');
+	container.innerHTML = ''; // Clear previous content
+
+	const caseHeader = document.createElement('h3');
+	caseHeader.textContent = data.summary;
+	container.appendChild(caseHeader);
+	
+	const paragraph = document.createElement('p');
+	paragraph.textContent = data.info;
+	container.appendChild(paragraph);
 }
 
 function showPartyPage(data) {
