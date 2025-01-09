@@ -273,18 +273,135 @@ function showPersonPage(data) {
 
 function showCasePage(data) {
 	
-	console.log(`CasePage ${data}`)
+	ddict = data.info
+	console.log(`CasePage ${ddict}`)
 
 	const container = document.getElementById('table-container');
 	container.innerHTML = ''; // Clear previous content
 
 	const caseHeader = document.createElement('h3');
-	caseHeader.textContent = data.summary;
+	caseHeader.textContent = ddict.summary;
 	container.appendChild(caseHeader);
 	
 	const paragraph = document.createElement('p');
-	paragraph.textContent = data.info;
+	paragraph.textContent = ddict.overview;
 	container.appendChild(paragraph);
+	
+	console.log("JUDGES")
+	console.log(ddict.judges)
+	
+	const judgesListContainer = document.createElement("div");
+	judgesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+	
+	const judgesHeading = document.createElement("h3");
+	judgesHeading.textContent = "Judges";
+	judgesListContainer.appendChild(judgesHeading);
+
+	// Create the unordered list
+	const jul = document.createElement("ul");
+	jul.className = "list-group"; // Bootstrap class for styled lists
+	
+	// Iterate over the dictionary and create list items
+	Object.entries(ddict.judges).forEach(([uuid, judgeData]) => {
+		const listItem = document.createElement("li");
+		listItem.className = "list-group-item"; // Bootstrap class for styled list items
+	
+		// Create the link
+		const link = document.createElement("a");
+		link.href = "#"; // Prevents default navigation
+		link.textContent = judgeData.name;
+		link.addEventListener("click", (event) => {
+			event.preventDefault(); // Prevent default link behavior
+			fetchSearchResult(judgeData.name, "Person", uuid); // Call the function with parameters
+		});
+	
+		// Append the link to the list item
+		listItem.appendChild(link);
+	
+		// Append the list item to the unordered list
+		jul.appendChild(listItem);
+	});
+	judgesListContainer.appendChild(jul);
+	container.appendChild(judgesListContainer);
+
+	console.log("ISSUES")
+	console.log(ddict.issues)
+	
+	const issuesListContainer = document.createElement("div");
+	issuesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+	
+	const issuesHeading = document.createElement("h3");
+	issuesHeading.textContent = "Issues";
+	issuesListContainer.appendChild(issuesHeading);
+
+	// Create the unordered list
+	const iul = document.createElement("ul");
+	iul.className = "list-group"; // Bootstrap class for styled lists
+
+	// Iterate over the dictionary and create list items
+	Object.entries(ddict.issues).forEach(([uuid, issueData]) => {
+		const listItem = document.createElement("li");
+		listItem.className = "list-group-item"; // Bootstrap class for styled list items
+
+		// Create the link
+		const link = document.createElement("a");
+		link.href = "#"; // Prevents default navigation
+		link.textContent = issueData.issue;
+		link.addEventListener("click", (event) => {
+			event.preventDefault(); // Prevent default link behavior
+			fetchSearchResult(issueData.issue, "Issue", null); // Call the function with parameters
+		});
+
+		// Append the link to the list item
+		listItem.appendChild(link);
+
+		// Append the list item to the unordered list
+		iul.appendChild(listItem);
+	});
+	issuesListContainer.appendChild(iul);
+	container.appendChild(issuesListContainer)
+
+
+	const partiesListContainer = document.createElement("div");
+	partiesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+		
+	// Create a heading for the list
+	const partiesHeading = document.createElement("h3");
+	partiesHeading.textContent = "Parties";
+	partiesListContainer.appendChild(partiesHeading);
+//	... build the list here
+	const ppara = document.createElement('p');
+	ppara.textContent = "(coming soon)";
+	partiesListContainer.appendChild(ppara);
+
+	container.appendChild(partiesListContainer)
+
+	const contentionsListContainer = document.createElement("div");
+	contentionsListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+			
+	// Create a heading for the list
+	const contentionsHeading = document.createElement("h3");
+	contentionsHeading.textContent = "Contentions";
+	contentionsListContainer.appendChild(contentionsHeading);
+//	... build the list here
+	const cpara = document.createElement('p');
+	cpara.textContent = "(coming soon)";
+	contentionsListContainer.appendChild(cpara);
+	container.appendChild(contentionsListContainer)
+
+	const witnessesListContainer = document.createElement("div");
+	witnessesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+			
+	// Create a heading for the list
+	const witnessesHeading = document.createElement("h3");
+	witnessesHeading.textContent = "Witnesses";
+	witnessesListContainer.appendChild(witnessesHeading);
+//	... build the list here
+	const wpara = document.createElement('p');
+	wpara.textContent = "(coming soon)";
+	witnessesListContainer.appendChild(wpara);
+	container.appendChild(witnessesListContainer)
+
 }
 
 function showPartyPage(data) {
