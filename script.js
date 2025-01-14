@@ -48,6 +48,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 			suggestionsDiv.style.display = "none";
 		}
 	}, 300)); // Adjust delay as needed
+	
+	// Hide the dropdown when clicking away
+	document.addEventListener('click', function (event) {
+		const form = document.getElementById('search-form');	
+		if (!form.contains(event.target)) {
+			suggestionsDiv.style.display = 'none';
+		}
+	});
+
+	const toggleHeaders = document.querySelectorAll('#case-summary .toggle-header');
+	const toggleContents = document.querySelectorAll('#case-summary .toggle-content');
+	
+	function handleResize() {
+		if (window.innerWidth > 768) {
+			// Large-screen mode: show all content and disable toggling
+			toggleContents.forEach(content => {
+				content.style.display = 'block'; // Ensure all content is visible
+			});
+			toggleHeaders.forEach(header => {
+				header.classList.remove('active'); // Remove active state
+				header.style.pointerEvents = 'none'; // Disable click events
+			});
+		} else {
+			// Small-screen mode: enable toggling
+			toggleHeaders.forEach(header => {
+				header.style.pointerEvents = ''; // Enable click events
+			});
+		}
+	}
+	
+	// Handle toggling for small screens
+	toggleHeaders.forEach(header => {
+		header.addEventListener('click', () => {
+			if (window.innerWidth <= 768) {
+				header.classList.toggle('active');
+				const content = header.closest('.row').querySelector('.toggle-content');
+				if (content) {
+					content.style.display = content.style.display === 'block' ? 'none' : 'block';
+				}
+			}
+		});
+	});
+	
+	// Listen for resize events
+	window.addEventListener('resize', handleResize);
+	
+	// Run on initial load
+	handleResize();
 });
 
 // Debounce function to limit API calls
@@ -168,7 +216,10 @@ function showDispoPage(data) {
 	
 	console.log(`DispositionPage ${data}`)
 	
+	document.getElementById('case-summary').classList.add('d-none');
+	
 	const container = document.getElementById('table-container');
+	container.classList.remove('d-none');
 	container.innerHTML = ''; // Clear previous content
 
 	const dispoHeader = document.createElement('h3');
@@ -228,7 +279,10 @@ function showPersonPage(data) {
 	
 	console.log(`PersonPage ${data}`)
 	
+	document.getElementById('case-summary').classList.add('d-none');
+	
 	const container = document.getElementById('table-container');
+	container.classList.remove('d-none');
 	container.innerHTML = ''; // Clear previous content
 	
 	const personHeader = document.createElement('h3');
@@ -274,150 +328,232 @@ function showPersonPage(data) {
 function showCasePage(data) {
 	
 	ddict = data.info
-	console.log(`CasePage ${ddict}`)
+//	console.log(`CasePage ${ddict}`)
+	console.log('CASE PAGE');
+	console.log(ddict);
+		
+	document.getElementById('table-container').classList.add('d-none');
+	
+	const page = document.getElementById('case-summary');
+	page.classList.remove('d-none'); // show the page
 
-	const container = document.getElementById('table-container');
-	container.innerHTML = ''; // Clear previous content
+//	Case:	
+	const caseDiv = document.getElementById('case-details');
+	
+	// const pElement = document.createElement('p');
+	// const strongElement = document.createElement('strong');
+	// strongElement.textContent = ddict.number;
+	// pElement.appendChild(strongElement);
+	// const normalElement = document.createTextNode(` (${ddict.county} County)`);
+	// pElement.appendChild(normalElement);
+	// caseDiv.appendChild(pElement);
+	
+	document.getElementById('case-summary-case').innerHTML = `
+		<strong>${ddict.number}</strong> (${ddict.county} County)
+	`;
 
-	const caseHeader = document.createElement('h3');
-	caseHeader.textContent = ddict.summary;
-	container.appendChild(caseHeader);
-	
-	const paragraph = document.createElement('p');
-	paragraph.textContent = ddict.overview;
-	container.appendChild(paragraph);
-	
-	console.log("JUDGES")
-	console.log(ddict.judges)
-	
-	const judgesListContainer = document.createElement("div");
-	judgesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
-	
-	const judgesHeading = document.createElement("h3");
-	judgesHeading.textContent = "Judges";
-	judgesListContainer.appendChild(judgesHeading);
+//	Judge(s):
+	const judgesDiv = document.getElementById('judge-details');
+	judgesDiv.innerHTML = '';
 
-	// Create the unordered list
 	const jul = document.createElement("ul");
-	jul.className = "list-group"; // Bootstrap class for styled lists
-	
-	// Iterate over the dictionary and create list items
+	jul.className = "mb-0 list-unstyled";
+// 	Iterate over the dictionary and create list items
 	Object.entries(ddict.judges).forEach(([uuid, judgeData]) => {
 		const listItem = document.createElement("li");
 		listItem.className = "list-group-item"; // Bootstrap class for styled list items
-	
 		// Create the link
 		const link = document.createElement("a");
 		link.href = "#"; // Prevents default navigation
 		link.textContent = judgeData.name;
 		link.addEventListener("click", (event) => {
 			event.preventDefault(); // Prevent default link behavior
+	//		console.log("CLICK!");
 			fetchSearchResult(judgeData.name, "Person", uuid); // Call the function with parameters
 		});
-	
-		// Append the link to the list item
 		listItem.appendChild(link);
-	
-		// Append the list item to the unordered list
 		jul.appendChild(listItem);
 	});
-	judgesListContainer.appendChild(jul);
-	container.appendChild(judgesListContainer);
-
-	console.log("ISSUES")
-	console.log(ddict.issues)
+	judgesDiv.appendChild(jul);
 	
-	const issuesListContainer = document.createElement("div");
-	issuesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+//	Issues:
+	const issuesDiv = document.getElementById('issue-details');
+	issuesDiv.innerHTML = '';
 	
-	const issuesHeading = document.createElement("h3");
-	issuesHeading.textContent = "Issues";
-	issuesListContainer.appendChild(issuesHeading);
-
-	// Create the unordered list
-	const iul = document.createElement("ul");
-	iul.className = "list-group"; // Bootstrap class for styled lists
-
-	// Iterate over the dictionary and create list items
+ 	const iul = document.createElement("ul");
+	iul.className = "mb-0 list-unstyled";
+// 	Iterate over the dictionary and create list items
 	Object.entries(ddict.issues).forEach(([uuid, issueData]) => {
-		const listItem = document.createElement("li");
-		listItem.className = "list-group-item"; // Bootstrap class for styled list items
-
-		// Create the link
-		const link = document.createElement("a");
-		link.href = "#"; // Prevents default navigation
-		link.textContent = issueData.issue;
-		link.addEventListener("click", (event) => {
-			event.preventDefault(); // Prevent default link behavior
-			fetchSearchResult(issueData.issue, "Issue", null); // Call the function with parameters
-		});
-
-		// Append the link to the list item
-		listItem.appendChild(link);
-
-		// Append the list item to the unordered list
+ 		const listItem = document.createElement("li");
+ 		listItem.className = "list-group-item"; // Bootstrap class for styled list items
+ 		// Create the link
+ 		const link = document.createElement("a");
+ 		link.href = "#"; // Prevents default navigation
+ 		link.textContent = issueData.issue;
+ 		link.addEventListener("click", (event) => {
+ 			event.preventDefault(); // Prevent default link behavior
+//			console.log("CLICK!");
+ 			fetchSearchResult(issueData.issue, "Issue", uuid); // Call the function with parameters
+ 		});
+ 		listItem.appendChild(link);
 		iul.appendChild(listItem);
-	});
-	issuesListContainer.appendChild(iul);
-	container.appendChild(issuesListContainer)
+ 	});
+ 	issuesDiv.appendChild(iul);
 
 
-	const partiesListContainer = document.createElement("div");
-	partiesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
-		
-	// Create a heading for the list
-	const partiesHeading = document.createElement("h3");
-	partiesHeading.textContent = "Parties";
-	partiesListContainer.appendChild(partiesHeading);
-//	... build the list here
-	const ppara = document.createElement('p');
-	ppara.textContent = "(coming soon)";
-	partiesListContainer.appendChild(ppara);
 
-	container.appendChild(partiesListContainer)
 
-	const contentionsListContainer = document.createElement("div");
-	contentionsListContainer.className = "container mt-4"; // Bootstrap container with margin-top
-			
-	// Create a heading for the list
-	const contentionsHeading = document.createElement("h3");
-	contentionsHeading.textContent = "Contentions";
-	contentionsListContainer.appendChild(contentionsHeading);
-//	... build the list here
-	const cpara = document.createElement('p');
-	cpara.textContent = "(coming soon)";
-	contentionsListContainer.appendChild(cpara);
-	container.appendChild(contentionsListContainer)
-
-	const witnessesListContainer = document.createElement("div");
-	witnessesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
-			
-	// Create a heading for the list
-	const witnessesHeading = document.createElement("h3");
-	witnessesHeading.textContent = "Witnesses";
-	witnessesListContainer.appendChild(witnessesHeading);
-//	... build the list here
-	const wpara = document.createElement('p');
-	wpara.textContent = "(coming soon)";
-	witnessesListContainer.appendChild(wpara);
-	container.appendChild(witnessesListContainer)
+// 	const container = document.getElementById('table-container');
+// 	container.innerHTML = ''; // Clear previous content
+// 
+// 	const caseHeader = document.createElement('h3');
+// 	caseHeader.textContent = ddict.summary;
+// 	container.appendChild(caseHeader);
+// 	
+// 	const paragraph = document.createElement('p');
+// 	paragraph.textContent = ddict.overview;
+// 	container.appendChild(paragraph);
+// 	
+// 	console.log("JUDGES")
+// 	console.log(ddict.judges)
+// 	
+// 	const judgesListContainer = document.createElement("div");
+// 	judgesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+// 	
+// 	const judgesHeading = document.createElement("h3");
+// 	judgesHeading.textContent = "Judges";
+// 	judgesListContainer.appendChild(judgesHeading);
+// 
+// 	// Create the unordered list
+// 	const jul = document.createElement("ul");
+// 	jul.className = "list-group"; // Bootstrap class for styled lists
+// 	
+// 	// Iterate over the dictionary and create list items
+// 	Object.entries(ddict.judges).forEach(([uuid, judgeData]) => {
+// 		const listItem = document.createElement("li");
+// 		listItem.className = "list-group-item"; // Bootstrap class for styled list items
+// 	
+// 		// Create the link
+// 		const link = document.createElement("a");
+// 		link.href = "#"; // Prevents default navigation
+// 		link.textContent = judgeData.name;
+// 		link.addEventListener("click", (event) => {
+// 			event.preventDefault(); // Prevent default link behavior
+// 			fetchSearchResult(judgeData.name, "Person", uuid); // Call the function with parameters
+// 		});
+// 	
+// 		// Append the link to the list item
+// 		listItem.appendChild(link);
+// 	
+// 		// Append the list item to the unordered list
+// 		jul.appendChild(listItem);
+// 	});
+// 	judgesListContainer.appendChild(jul);
+// 	container.appendChild(judgesListContainer);
+// 
+// 	console.log("ISSUES")
+// 	console.log(ddict.issues)
+// 	
+// 	const issuesListContainer = document.createElement("div");
+// 	issuesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+// 	
+// 	const issuesHeading = document.createElement("h3");
+// 	issuesHeading.textContent = "Issues";
+// 	issuesListContainer.appendChild(issuesHeading);
+// 
+// 	// Create the unordered list
+// 	const iul = document.createElement("ul");
+// 	iul.className = "list-group"; // Bootstrap class for styled lists
+// 
+// 	// Iterate over the dictionary and create list items
+// 	Object.entries(ddict.issues).forEach(([uuid, issueData]) => {
+// 		const listItem = document.createElement("li");
+// 		listItem.className = "list-group-item"; // Bootstrap class for styled list items
+// 
+// 		// Create the link
+// 		const link = document.createElement("a");
+// 		link.href = "#"; // Prevents default navigation
+// 		link.textContent = issueData.issue;
+// 		link.addEventListener("click", (event) => {
+// 			event.preventDefault(); // Prevent default link behavior
+// 			fetchSearchResult(issueData.issue, "Issue", null); // Call the function with parameters
+// 		});
+// 
+// 		// Append the link to the list item
+// 		listItem.appendChild(link);
+// 
+// 		// Append the list item to the unordered list
+// 		iul.appendChild(listItem);
+// 	});
+// 	issuesListContainer.appendChild(iul);
+// 	container.appendChild(issuesListContainer)
+// 
+// 
+// 	const partiesListContainer = document.createElement("div");
+// 	partiesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+// 		
+// 	// Create a heading for the list
+// 	const partiesHeading = document.createElement("h3");
+// 	partiesHeading.textContent = "Parties";
+// 	partiesListContainer.appendChild(partiesHeading);
+// //	... build the list here
+// 	const ppara = document.createElement('p');
+// 	ppara.textContent = "(coming soon)";
+// 	partiesListContainer.appendChild(ppara);
+// 
+// 	container.appendChild(partiesListContainer)
+// 
+// 	const contentionsListContainer = document.createElement("div");
+// 	contentionsListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+// 			
+// 	// Create a heading for the list
+// 	const contentionsHeading = document.createElement("h3");
+// 	contentionsHeading.textContent = "Contentions";
+// 	contentionsListContainer.appendChild(contentionsHeading);
+// //	... build the list here
+// 	const cpara = document.createElement('p');
+// 	cpara.textContent = "(coming soon)";
+// 	contentionsListContainer.appendChild(cpara);
+// 	container.appendChild(contentionsListContainer)
+// 
+// 	const witnessesListContainer = document.createElement("div");
+// 	witnessesListContainer.className = "container mt-4"; // Bootstrap container with margin-top
+// 			
+// 	// Create a heading for the list
+// 	const witnessesHeading = document.createElement("h3");
+// 	witnessesHeading.textContent = "Witnesses";
+// 	witnessesListContainer.appendChild(witnessesHeading);
+// //	... build the list here
+// 	const wpara = document.createElement('p');
+// 	wpara.textContent = "(coming soon)";
+// 	witnessesListContainer.appendChild(wpara);
+// 	container.appendChild(witnessesListContainer)
 
 }
 
 function showPartyPage(data) {
-	
+
+	document.getElementById('case-summary').classList.add('d-none');
+
 	const tableContainer = document.getElementById('table-container');
+	tableContainer.classList.remove('d-none');
 	tableContainer.textContent = `Party ${data.header}`;
 }
 
 function showIssuePage(data) {
 	
+	document.getElementById('case-summary').classList.add('d-none');
+
 	const tableContainer = document.getElementById('table-container');
+	tableContainer.classList.remove('d-none');
 	tableContainer.textContent = `Issue ${data.header}`;
 }
 
 function showOopsPage(data) {
 	
+	document.getElementById('case-summary').classList.add('d-none');
+
 	const tableContainer = document.getElementById('table-container');
+	tableContainer.classList.remove('d-none');
 	tableContainer.textContent = `Oops! ${data.header}`;
 }
